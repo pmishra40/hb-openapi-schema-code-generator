@@ -1,0 +1,220 @@
+openapi: 3.0.3
+info:
+  title: GL Journal Events API
+  version: '1.0.0'
+  description: API for general ledger journal entries including headers and line items
+
+paths:
+  /gl-journal-events:
+    post:
+      summary: Publish a GL journal event
+      operationId: publishGlJournalEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlJournalEvent'
+      responses:
+        '200':
+          description: Event published successfully
+        '400':
+          description: Bad request
+
+components:
+  schemas:
+    GlJournalEvent:
+      type: object
+      required:
+        - journalHeader
+        - journalLines
+        - approvalInfo
+        - eventMetadata
+      properties:
+        journalHeader:
+          $ref: '#/components/schemas/JournalHeader'
+        journalLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalLine'
+        approvalInfo:
+          $ref: '#/components/schemas/ApprovalInfo'
+        eventMetadata:
+          $ref: '#/components/schemas/EventMetadata'
+
+    JournalHeader:
+      type: object
+      required:
+        - journalId
+        - journalNumber
+        - postingDate
+        - journalSource
+        - description
+        - status
+        - currency
+        - totalDebitAmount
+        - totalCreditAmount
+      properties:
+        journalId:
+          type: string
+          format: uuid
+        journalNumber:
+          type: string
+          pattern: '^JE-\d{8}-\d{6}$'
+        postingDate:
+          type: string
+          format: date
+        effectiveDate:
+          type: string
+          format: date
+        journalSource:
+          type: string
+          enum: [MANUAL, IMPORT, SYSTEM, INTERFACE]
+        description:
+          type: string
+          maxLength: 500
+        status:
+          type: string
+          enum: [DRAFT, PENDING_APPROVAL, APPROVED, POSTED, REVERSED]
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        totalDebitAmount:
+          type: number
+          format: double
+        totalCreditAmount:
+          type: number
+          format: double
+        reversalJournalId:
+          type: string
+          format: uuid
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        fiscalYear:
+          type: integer
+          minimum: 2000
+          maximum: 9999
+        fiscalPeriod:
+          type: integer
+          minimum: 1
+          maximum: 12
+
+    JournalLine:
+      type: object
+      required:
+        - lineId
+        - lineNumber
+        - accountId
+        - accountNumber
+        - debitAmount
+        - creditAmount
+      properties:
+        lineId:
+          type: string
+          format: uuid
+        lineNumber:
+          type: integer
+          minimum: 1
+        accountId:
+          type: string
+        accountNumber:
+          type: string
+          pattern: '^[0-9]{4}-[0-9]{3}$'
+        debitAmount:
+          type: number
+          format: double
+          minimum: 0
+        creditAmount:
+          type: number
+          format: double
+          minimum: 0
+        description:
+          type: string
+          maxLength: 200
+        department:
+          type: string
+        costCenter:
+          type: string
+        project:
+          type: string
+        taxCode:
+          type: string
+        dimensions:
+          type: object
+          additionalProperties:
+            type: string
+        references:
+          type: array
+          items:
+            type: object
+            properties:
+              refType:
+                type: string
+              refId:
+                type: string
+              refNumber:
+                type: string
+
+    ApprovalInfo:
+      type: object
+      required:
+        - approvalStatus
+        - requiredLevels
+      properties:
+        approvalStatus:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        requiredLevels:
+          type: integer
+          minimum: 1
+        currentLevel:
+          type: integer
+        approvers:
+          type: array
+          items:
+            type: object
+            properties:
+              approverId:
+                type: string
+              approverName:
+                type: string
+              level:
+                type: integer
+              status:
+                type: string
+                enum: [PENDING, APPROVED, REJECTED]
+              actionDate:
+                type: string
+                format: date-time
+              comments:
+                type: string
+
+    EventMetadata:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - eventTimestamp
+        - schemaVersion
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          enum: [CREATED, UPDATED, APPROVED, POSTED, REVERSED]
+        eventTimestamp:
+          type: string
+          format: date-time
+        schemaVersion:
+          type: string
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+        userId:
+          type: string
+        sourceSystem:
+          type: string
+        correlationId:
+          type: string

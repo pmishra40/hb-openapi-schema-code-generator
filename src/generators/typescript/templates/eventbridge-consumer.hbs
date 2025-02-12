@@ -1,0 +1,7 @@
+import { {{name}} } from '../models/{{name}}';
+import { ObjectSerializer } from '../models/ObjectSerializer';
+
+export const unmarshal = (eventDetail: string): {{name}} => {
+  const parsed = ObjectSerializer.parse(eventDetail, 'application/json');
+  return ObjectSerializer.deserialize(parsed, '{{name}}', 'json') as {{name}};
+};

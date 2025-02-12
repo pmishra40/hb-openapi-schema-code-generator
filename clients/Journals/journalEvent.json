@@ -1,0 +1,97 @@
+{
+    "journalHeader": {
+      "journalId": "123e4567-e89b-12d3-a456-426614174000",
+      "journalNumber": "JE-20240209-000001",
+      "postingDate": "2024-02-09",
+      "effectiveDate": "2024-02-09",
+      "journalSource": "MANUAL",
+      "description": "Monthly depreciation entry for equipment",
+      "status": "PENDING_APPROVAL",
+      "currency": "USD",
+      "totalDebitAmount": 5000.00,
+      "totalCreditAmount": 5000.00,
+      "fiscalYear": 2024,
+      "fiscalPeriod": 2,
+      "tags": ["Depreciation", "Equipment", "Monthly"]
+    },
+    "journalLines": [
+      {
+        "lineId": "123e4567-e89b-12d3-a456-426614174001",
+        "lineNumber": 1,
+        "accountId": "DEPR-EXP-001",
+        "accountNumber": "6750-100",
+        "debitAmount": 5000.00,
+        "creditAmount": 0.00,
+        "description": "Equipment depreciation expense",
+        "department": "OPS",
+        "costCenter": "CC001",
+        "project": "PROJ2024",
+        "dimensions": {
+          "location": "HQ",
+          "division": "MANUFACTURING"
+        },
+        "references": [
+          {
+            "refType": "ASSET",
+            "refId": "FA-2024-001",
+            "refNumber": "EQ-001"
+          }
+        ]
+      },
+      {
+        "lineId": "123e4567-e89b-12d3-a456-426614174002",
+        "lineNumber": 2,
+        "accountId": "ACC-DEPR-001",
+        "accountNumber": "1750-100",
+        "debitAmount": 0.00,
+        "creditAmount": 5000.00,
+        "description": "Accumulated depreciation",
+        "department": "OPS",
+        "costCenter": "CC001",
+        "project": "PROJ2024",
+        "dimensions": {
+          "location": "HQ",
+          "division": "MANUFACTURING"
+        },
+        "references": [
+          {
+            "refType": "ASSET",
+            "refId": "FA-2024-001",
+            "refNumber": "EQ-001"
+          }
+        ]
+      }
+    ],
+    "approvalInfo": {
+      "approvalStatus": "PENDING",
+      "requiredLevels": 2,
+      "currentLevel": 1,
+      "approvers": [
+        {
+          "approverId": "USER001",
+          "approverName": "John Doe",
+          "level": 1,
+          "status": "PENDING",
+          "actionDate": null,
+          "comments": null
+        },
+        {
+          "approverId": "USER002",
+          "approverName": "Jane Smith",
+          "level": 2,
+          "status": "PENDING",
+          "actionDate": null,
+          "comments": null
+        }
+      ]
+    },
+    "eventMetadata": {
+      "eventId": "123e4567-e89b-12d3-a456-426614174999",
+      "eventType": "CREATED",
+      "eventTimestamp": "2024-02-09T14:30:00.000Z",
+      "schemaVersion": "1.0.0",
+      "userId": "SYSTEM",
+      "sourceSystem": "GL_SYSTEM",
+      "correlationId": "BATCH-2024-02-09-001"
+    }
+  }
