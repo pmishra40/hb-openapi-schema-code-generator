@@ -23,72 +23,159 @@ paths:
 
 components:
   schemas:
+    ###########
+    #
+    # Events
+    #
+    ###########
+    
     BillEvent:
       type: object
       required:
         - bill
-        - project
-        - lineItems
-        - approval
         - eventMetadata
       properties:
         bill:
           $ref: '#/components/schemas/Bill'
+        eventMetadata:
+          $ref: '#/components/schemas/Metadata'
+          
+    ###########
+    #
+    # Enums
+    #
+    ###########
+    
+    BillType:
+      type: string
+      enum: 
+        - STANDARD
+        - DEPOSIT
+        - OVERHEAD
+        - REPAIR_AND_MAINTENANCE
+        - WARRANTY    
+        
+    BillSource:
+      type: string
+      enum: 
+        - MANUAL
+        - CLICK_TO_PAY
+        - AUTO_PARSED
+        
+    BillStatus:
+      type: string
+      enum:
+        - DRAFT
+        - CHANGES_REQUESTED
+        - RELEASE_SCHEDULED
+        - PENDING_APPROVAL
+        - READY_TO_PAY
+        - REJECTED
+        - PAID
+        - REVERSED
+        - CANCELLED
+        - PENDING_CONDITIONAL_LIEN_WAIVER
+        - PENDING_UNCONDITIONAL_LIEN_WAIVER
+        - UNRELEASED
+        - PARTIALLY_PAID
+        
+    LotType:
+      type: string
+      enum:
+        - BOYL
+        - BOOL
+        - HBL
+        - BTR
+        - FEE
+    
+    ProjectStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - COMPLETED
+        - CLOSED
+        - HOLD
+        - UNDER_WARRANTY
+    
+    ApprovalStatus:
+      type: string
+      enum:
+        - CHANGES_NEEDED
+        - REQUESTED
+        - APPROVED
+        - REJECTED
+    
+    CostClassificationType:
+      type: string
+      enum:
+        - SOFT
+        - HARD
+      
+    ###########
+    #
+    # Objects
+    #
+    ###########
+    
+    Bill:
+      type: object
+      required:
+        - id
+        - type
+        - source
+        - status
+        - project
+        - lineItems
+        - approval
+        - tradePartner
+        - billNumber
+        - tradePartnerBillNumber
+        - billDate
+        - amountInCents
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        type:
+          $ref: '#/components/schemas/BillType'
+        source:
+          $ref: '#/components/schemas/BillSource'
+        status:
+          $ref: '#/components/schemas/BillStatus'
         project:
           $ref: '#/components/schemas/Project'
         lineItems:
           type: array
           items:
-            $ref: '#/components/schemas/LineItem'
+            $ref: '#/components/schemas/BillLineItem'
         approval:
           $ref: '#/components/schemas/Approval'
-        eventMetadata:
-          $ref: '#/components/schemas/Metadata'
-
-    Bill:
-      type: object
-      required:
-        - billId
-        - billNumber
-        - tradePartnerBillNumber
-        - tradePartnerId
-        - billType
-        - billSource
-        - billDate
-        - billStatus
-        - totalAmountInCents
-      properties:
-        billId:
+        tradePartner: 
+          $ref: '#/components/schemas/TradePartner'
+        tradePartnerNumber: 
           type: string
-        billNumber:
+          description: "The bill number"
+        referenceNumber:
           type: string
-        tradePartnerBillNumber:
-          type: string
-        tradePartnerId:
-          type: string
-        tradePartnerName:
-          type: string
-        billType:
-          type: string
-        billSource:
-          type: string
+          description: "A trade configurable number for their own reference"
+          nullable: true
         billDate:
           type: string
           format: date
           description: "ISO 8601 date format (YYYY-MM-DD)"
-        billStatus:
-          type: string
-        totalAmountInCents:
+        amountInCents:
           type: integer
         isTradePartnerCredit:
           type: boolean
-        paymentTerms:
-          type: string
+        # paymentTerms seems problematic, it's enum like but is not actually an enum.  Even though we call them things like "NET15" and "NET30",
+        # that isn't actually how we calculate them (we align with our payment cycle). I'm not sure if this would align with how intacct defines
+        # "NET15" or "NET30" even if the naming matches 
+        paymentTerms: 
+          type: string 
         dueDate:
           type: string
           format: date
           description: "ISO 8601 date format (YYYY-MM-DD)"
-        amountPaidInCents:
+        paidInCents:
           type: integer
         paidDate:
           type: string
@@ -97,92 +184,108 @@ components:
           nullable: true
         externalSystemBillId:
           type: string
-        reversalBillId:
+          nullable: true
+        externalSystemReversalBillId:
           type: string
           nullable: true
         postedDate:
           type: string
           format: date
           description: "ISO 8601 date format (YYYY-MM-DD)"
-
+          nullable: true
+          
     Project:
       type: object
       required:
-        - projectId
+        - id
         - projectName
         - lotType
-        - projectStatus
+        - status
       properties:
-        projectId:
-          type: string
-        projectName:
+        id:
+          $ref: '#/components/schemas/ID'
+        name:
           type: string
         lotType:
-          type: string
-        projectStatus:
-          type: string
+          $ref: '#/components/schemas/LotType'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
         warrantyStartDate:
           type: string
           format: date
           description: "ISO 8601 date format (YYYY-MM-DD)"
           nullable: true
-        verticalCompletionDate:
+        verticalCompleteDate:
           type: string
           format: date
           description: "ISO 8601 date format (YYYY-MM-DD)"
           nullable: true
 
-    LineItem:
+    BillLineItem:
       type: object
       required:
-        - lineId
+        - id
         - amountInCents
-        - costCodeId
-        - costCodeNumber
-        - costClassification
+        - costCode
       properties:
-        lineId:
-          type: string
+        id:
+          $ref: '#/components/schemas/ID'
         amountInCents:
           type: integer
-        paidInCents:
+        paidInCents: # i'm not sure this should be included, it is a prorated field based off the total in the bill when the payment info should flow from fdi to blueprint
           type: integer
-        costCodeId:
-          type: string
-        costCodeNumber:
-          type: string
-        costClassification:
-          type: string
-        costDivision:
-          type: string
-          nullable: true
-        costCodeVersion:
-          type: integer
-        sourceId:
-          type: string
-        description:
-          type: string
+        costCode:
+          $ref: '#/components/schemas/CostCode'
 
     Approval:
       type: object
       required:
         - approvalStatus
       properties:
-        approvalStatus:
-          type: string
-        approvalDate:
-          type: string
-          format: date-time
-          description: "ISO 8601 UTC date-time format (YYYY-MM-DDThh:mm:ss.sssZ)"
-          nullable: true
-        rejectionDate:
+        id:
+          $ref: '#/components/schemas/ID'
+        status:
+          $ref: '#/components/schemas/ApprovalStatus'
+        statusUpdatedAt:
           type: string
           format: date-time
           description: "ISO 8601 UTC date-time format (YYYY-MM-DDThh:mm:ss.sssZ)"
           nullable: true
-        rejectionReason:
+          
+    CostCode:
+      type: object
+      required: 
+        - id
+        - number
+        - division
+        - version
+        - costClassification
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        number:
           type: string
-          nullable: true
+        division: 
+          type: string
+        version:
+          type: integer
+        costClassification:
+          $ref: '#/components/schemas/CostClassificationType'
+          
+    TradePartner:
+      type: object
+      required: 
+        - id
+        - name
+      properties:
+        id: 
+          $ref: '#/components/schemas/ID'
+        name: 
+          type: string
+          
+    ID:
+      type: string
+      pattern: '^[a-z]+:\d+$'
 
     Metadata:
       type: object
