@@ -463,13 +463,8 @@ async def create_bill(bill_data: dict):
 ## License
 
 MIT License - See LICENSE file for details
-    project=project_data,
-    lineItems=line_items,
-    approval=approval_data,
-    eventMetadata=metadata
-)
 
-response = publisher.publish(event)
+
 ```
 
 ## Technology Choices
