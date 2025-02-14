@@ -1,4 +1,4 @@
-# HB Schema Registry OpenAPI Integration Generator
+# HB Schema Registry - OpenAPI Generator
 
 ## Overview
 
