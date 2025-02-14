@@ -1,0 +1,63 @@
+from typing import Dict, Any, Callable, List
+import boto3
+from models.{{snakeCase modelName}} import {{modelName}}
+
+class {{modelName}}Consumer:
+    def __init__(self, region: str = '{{region}}', event_bus_name: str = '{{eventBusName}}'):
+        """Initialize the {{modelName}} event consumer.
+
+        Args:
+            region (str): AWS region for EventBridge. Defaults to '{{region}}'.
+            event_bus_name (str): EventBridge event bus name. Defaults to '{{eventBusName}}'.
+        """
+        self.event_bus_name = event_bus_name
+        self.client = boto3.client('events', region_name=region)
+        self.handlers: List[Callable[[{{modelName}}], None]] = []
+
+    def on(self, handler: Callable[[{{modelName}}], None]) -> None:
+        """Register a handler for {{modelName}} events.
+
+        Args:
+            handler (Callable[[{{modelName}}], None]): Function to handle the event.
+
+        Example:
+            ```python
+            consumer = {{modelName}}Consumer()
+            
+            @consumer.on
+            def handle_event(event: {{modelName}}) -> None:
+                print(f"Received event: {event}")
+            ```
+        """
+        self.handlers.append(handler)
+
+    def handle_event(self, event_data: Dict[str, Any]) -> None:
+        """Handle an incoming event.
+
+        Args:
+            event_data (Dict[str, Any]): Raw event data from EventBridge.
+        """
+        try:
+            # Parse event data into model
+            event = {{modelName}}.from_dict(event_data['detail'])
+            
+            # Call all registered handlers
+            for handler in self.handlers:
+                handler(event)
+        except Exception as e:
+            # Log error and continue
+            print(f"Error handling event: {str(e)}")
+
+    def start(self) -> None:
+        """Start listening for events.
+
+        This method sets up the necessary EventBridge rules and targets
+        to receive events. It's a placeholder for now - in a real implementation,
+        you would typically use AWS Lambda or another compute service to receive events.
+        """
+        # TODO: Implement event listening logic
+        # This would typically involve:
+        # 1. Creating an EventBridge rule
+        # 2. Setting up a target (Lambda, SQS, etc.)
+        # 3. Starting the event processing
+        pass

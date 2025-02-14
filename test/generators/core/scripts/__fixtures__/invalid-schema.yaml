@@ -1,0 +1,13 @@
+openapi: invalid
+info:
+  title: Invalid API
+  version: not-a-version
+paths:
+  invalid-path:
+    - this is not valid OpenAPI syntax
+components:
+  schemas:
+    InvalidEvent:
+      type: invalid-type
+      properties:
+        id: string # Invalid property syntax

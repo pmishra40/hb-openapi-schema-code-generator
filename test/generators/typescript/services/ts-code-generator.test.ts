@@ -1,5 +1,5 @@
-import { OpenAPITypeScriptGenerator } from '../ts-code-generator';
-import { createMockLogger, createMockOpenAPIDocument } from './test-utils';
+import { OpenAPIGenerator } from '../../../../src/generators/core/code-generator';
+import { createMockLogger, createMockOpenAPIDocument } from '../../../../test/utils/test-utils';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 
@@ -16,12 +16,13 @@ describe('OpenAPITypeScriptGenerator', () => {
 
   describe('constructor', () => {
     it('should initialize with default options', () => {
-      const generator = new OpenAPITypeScriptGenerator(mockDocument);
+      const generator = new OpenAPIGenerator(mockDocument, { language: 'typescript' });
       expect(generator).toBeDefined();
     });
 
     it('should initialize with custom options', () => {
-      const generator = new OpenAPITypeScriptGenerator(mockDocument, {
+      const generator = new OpenAPIGenerator(mockDocument, {
+        language: 'typescript',
         npmPackageName: '@test/package',
         region: 'us-east-1'
       });
@@ -32,15 +33,15 @@ describe('OpenAPITypeScriptGenerator', () => {
       const invalidDoc = { info: { title: 'Test', version: '1.0.0' } } as any;
 
 
-      expect(() => new OpenAPITypeScriptGenerator(invalidDoc)).toThrow();
+      expect(() => new OpenAPIGenerator(invalidDoc, { language: 'typescript' })).toThrow();
     });
   });
 
   describe('generate', () => {
-    let generator: OpenAPITypeScriptGenerator;
+    let generator: OpenAPIGenerator;
 
     beforeEach(() => {
-      generator = new OpenAPITypeScriptGenerator(mockDocument, {
+      generator = new OpenAPIGenerator(mockDocument, { language: 'typescript',
         logger: mockLogger
       });
     });
@@ -117,7 +118,8 @@ describe('OpenAPITypeScriptGenerator', () => {
 
   describe('buildAdditionalProperties', () => {
     it('should build properties string correctly', () => {
-      const generator = new OpenAPITypeScriptGenerator(mockDocument, {
+      const generator = new OpenAPIGenerator(mockDocument, {
+        language: 'typescript',
         npmPackageName: '@test/package',
         npmVersion: '2.0.0'
       });

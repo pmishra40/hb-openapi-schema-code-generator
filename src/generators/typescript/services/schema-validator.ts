@@ -23,13 +23,18 @@ export class OpenAPISchemaValidator implements SchemaValidator {
         if (!document) {
             throw new Error('OpenAPI document is required');
         }
-        if (!document.components?.schemas) {
-            throw new Error('OpenAPI document must contain components.schemas');
-        }
         
-        // Validate required fields in the document
+        // Validate OpenAPI version first
         if (!document.openapi) {
             throw new Error('OpenAPI version is required');
+        }
+        if (!document.openapi.startsWith('3.')) {
+            throw new Error(`Invalid OpenAPI version. Expected 3.x.x but got ${document.openapi}`);
+        }
+
+        // Validate required document structure
+        if (!document.components?.schemas) {
+            throw new Error('OpenAPI document must contain components.schemas');
         }
         if (!document.info) {
             throw new Error('OpenAPI info section is required');

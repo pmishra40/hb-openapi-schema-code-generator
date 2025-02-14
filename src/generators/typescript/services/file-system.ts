@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync, rmSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync, rmSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { Logger } from 'pino';
 
@@ -72,6 +72,29 @@ export interface FileSystem {
      * @throws {Error} If cleanup operations fail
      */
     cleanup(files: string[], directories: string[]): void;
+
+    /**
+     * Create a folder and any necessary parent directories
+     * @param {string} path - Path to the folder to create
+     * @throws {Error} If folder creation fails
+     */
+    createFolder(path: string): void;
+
+    /**
+     * Move a file from one location to another
+     * @param {string} sourcePath - Source file path
+     * @param {string} targetPath - Target file path
+     * @throws {Error} If file move fails
+     */
+    moveFile(sourcePath: string, targetPath: string): void;
+
+    /**
+     * Read directory contents
+     * @param {string} path - Path to directory
+     * @returns {string[]} List of file names in directory
+     * @throws {Error} If directory read fails
+     */
+    readdir(path: string): string[];
 }
 
 /**
@@ -90,8 +113,13 @@ export class NodeFileSystem implements FileSystem {
     constructor(private logger: Logger) {}
 
     writeFile(path: string, content: string): void {
-        this.logger.debug({ path }, 'Writing file');
-        writeFileSync(path, content);
+        try {
+            this.logger.debug({ path }, 'Writing file');
+            writeFileSync(path, content);
+        } catch (error) {
+            this.logger.error({ path, error }, 'Error writing file');
+            throw error;
+        }
     }
 
     readFile(path: string): string {
@@ -126,5 +154,21 @@ export class NodeFileSystem implements FileSystem {
                 rmSync(dir, { recursive: true, force: true });
             }
         });
+    }
+
+    createFolder(path: string): void {
+        this.logger.debug({ path }, 'Creating folder');
+        mkdirSync(path, { recursive: true });
+    }
+
+    moveFile(sourcePath: string, targetPath: string): void {
+        this.logger.debug({ sourcePath, targetPath }, 'Moving file');
+        writeFileSync(targetPath, readFileSync(sourcePath));
+        unlinkSync(sourcePath);
+    }
+
+    readdir(path: string): string[] {
+        this.logger.debug({ path }, 'Reading directory');
+        return readdirSync(path);
     }
 }

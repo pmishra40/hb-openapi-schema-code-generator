@@ -3,7 +3,7 @@ import { Logger } from 'pino';
 import { TemplateRenderer } from './template-renderer';
 import { FileSystem } from './file-system';
 import { join } from 'path';
-import { GeneratorOptions } from '../types';
+import { GeneratorOptions } from '../../core/types';
 
 /**
  * Represents an event definition from the OpenAPI schema

@@ -1,0 +1,50 @@
+from typing import Dict, Any
+import boto3
+import json
+from datetime import date, datetime
+from ..models.{{snakeCase modelName}} import {{modelName}}
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (date, datetime)):
+            return obj.isoformat()
+        return super().default(obj)
+
+class {{modelName}}Publisher:
+    def __init__(self, region: str = '{{region}}', event_bus_name: str = '{{eventBusName}}', source: str = '{{defaultSource}}'):
+        """Initialize the {{modelName}} event publisher.
+
+        Args:
+            region (str): AWS region for EventBridge. Defaults to '{{region}}'.
+            event_bus_name (str): EventBridge event bus name. Defaults to '{{eventBusName}}'.
+            source (str): Source identifier for events. Defaults to '{{defaultSource}}'.
+        """
+        self.event_bus_name = event_bus_name
+        self.source = source
+        self.client = boto3.client('events', region_name=region)
+
+    def publish(self, event: {{modelName}}) -> Dict[str, Any]:
+        """Publish a {{modelName}} event to EventBridge.
+
+        Args:
+            event ({{modelName}}): The event to publish.
+
+        Returns:
+            Dict[str, Any]: Response from EventBridge PutEvents API.
+
+        Example:
+            ```python
+            publisher = {{modelName}}Publisher()
+            event = {{modelName}}(id='123', data='test')
+            response = publisher.publish(event)
+            ```
+        """
+        event_entry = {
+            'Source': self.source,
+            'DetailType': '{{modelName}}',
+            'Detail': json.dumps(event.model_dump(by_alias=True), cls=DateTimeEncoder),
+            'EventBusName': self.event_bus_name
+        }
+
+        response = self.client.put_events(Entries=[event_entry])
+        return response

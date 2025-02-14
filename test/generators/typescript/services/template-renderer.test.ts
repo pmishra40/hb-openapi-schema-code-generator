@@ -1,4 +1,4 @@
-import { HandlebarsTemplateRenderer } from '../services/template-renderer';
+import { HandlebarsTemplateRenderer } from '../../../../src/generators/typescript/services/template-renderer';
 
 describe('HandlebarsTemplateRenderer', () => {
   let renderer: HandlebarsTemplateRenderer;
