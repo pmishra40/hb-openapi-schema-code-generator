@@ -460,9 +460,6 @@ async def create_bill(bill_data: dict):
    - Schema registry integration
    - Code generation plugins
 
-## License
-
-MIT License - See LICENSE file for details
    - Validates OpenAPI document structure
    - Ensures required components are present
    - Verifies schema compatibility
