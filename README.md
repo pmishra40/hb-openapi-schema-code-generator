@@ -1211,59 +1211,6 @@ async def create_bill(bill_data: dict):
         return {'error': str(e)}, 500
 ```
 
-## Security Considerations
-
-1. **AWS Credentials**
-   - Use IAM roles with minimal permissions
-   - Never hardcode credentials
-   - Rotate access keys regularly
-
-2. **Event Data**
-   - Validate all event data
-   - Sanitize sensitive information
-   - Use appropriate data types
-
-3. **Schema Security**
-   - Keep schemas in version control
-   - Review schema changes
-   - Document security requirements
-
-## Roadmap
-
-1. **Short Term**
-   - Additional language support
-   - Enhanced schema validation
-   - Performance improvements
-
-2. **Medium Term**
-   - Custom template support
-   - Schema versioning
-   - Event pattern validation
-
-3. **Long Term**
-   - GraphQL support
-   - Schema registry integration
-   - Code generation plugins
-
-   - Validates OpenAPI document structure
-   - Ensures required components are present
-   - Verifies schema compatibility
-
-3. **TypeScript Model Generation**
-   - Generates TypeScript interfaces from schemas
-   - Handles nested object structures
-   - Manages type imports and exports
-
-4. **EventBridge Integration**
-   - Creates publisher classes for event emission
-   - Generates consumer classes for event handling
-   - Implements type-safe event payload handling
-
-5. **Code Organization**
-   - Generates modular, maintainable code
-   - Implements clean separation of concerns
-   - Provides clear file organization
-
 ### Event Handling
 
 ```typescript
