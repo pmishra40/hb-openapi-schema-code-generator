@@ -87,6 +87,51 @@ The HB Schema Registry OpenAPI Integration Generator is a powerful tool that tra
      }
      ```
 
+   - **CLI Usage**
+     The OpenAPI Generator can be used directly from the terminal:
+     ```bash
+     # Install globally
+     npm install @openapitools/openapi-generator-cli -g
+
+     # Generate TypeScript client
+     openapi-generator-cli generate \
+       -i path/to/schema.yaml \
+       -g typescript-node \
+       -o ./generated \
+       --additional-properties=supportsES6=true,npmName=@org/events
+
+     # Generate Python client with type hints
+     openapi-generator-cli generate \
+       -i path/to/schema.yaml \
+       -g python \
+       -o ./generated \
+       --additional-properties=packageName=myorg.events,pythonVersion=3.8
+
+     # List available generators
+     openapi-generator-cli list
+
+     # Validate OpenAPI schema
+     openapi-generator-cli validate -i path/to/schema.yaml
+     ```
+
+     The CLI supports numerous configuration options:
+     ```bash
+     # TypeScript configuration
+     --additional-properties=\
+     supportsES6=true,\
+     modelPropertyNaming=camelCase,\
+     enumPropertyNaming=UPPERCASE,\
+     npmName=@org/events,\
+     npmVersion=1.0.0
+
+     # Python configuration
+     --additional-properties=\
+     packageName=myorg.events,\
+     pythonVersion=3.8,\
+     generateSourceCodeOnly=true,\
+     useNose=true
+     ```
+
    - **Type Generation**
      The CLI excels at generating accurate types:
      ```typescript
