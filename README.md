@@ -4,32 +4,277 @@
 
 The HB Schema Registry OpenAPI Integration Generator is a powerful tool that transforms OpenAPI specifications into type-safe code with seamless AWS EventBridge integration. It supports both TypeScript and Python, automating the creation of event publishers, consumers, and data models while ensuring strict type safety and schema validation.
 
+## Table of Contents
+
+1. [Features](#features)
+2. [Architecture](#architecture)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Development](#development)
+6. [Error Handling](#error-handling)
+7. [Best Practices](#best-practices)
+8. [Integration Examples](#integration-examples)
+9. [Contributing](#contributing)
+
 ## Features
 
-### Core Features
+### Core Capabilities
+
 1. **Multi-Language Support**
-   - TypeScript code generation with full type safety
-   - Python code generation with Pydantic models
-   - Language-specific best practices and patterns
+   - TypeScript with full type safety
+   - Python with Pydantic models
+   - Language-specific best practices
+   - Consistent patterns across languages
 
 2. **AWS EventBridge Integration**
    - Automated event publisher generation
    - Type-safe event consumer classes
    - Configurable event bus settings
    - Source and detail-type customization
+   - Cross-account event routing
 
 3. **Schema Validation**
    - OpenAPI 3.x specification validation
-   - Runtime schema validation
+   - Runtime type checking
    - Detailed error reporting
+   - Schema compatibility verification
 
 4. **Code Generation**
-   - Clean, maintainable code output
+   - Clean, maintainable output
    - Customizable templates
-   - Automatic cleanup of temporary files
-   - Support for nested schemas and references
+   - Automatic cleanup
+   - Support for nested schemas
+   - Reference resolution
 
 ## Architecture
+
+### Technology Stack
+
+#### Core Technologies
+
+1. **OpenAPI Generator CLI**
+   The OpenAPI Generator CLI is a cornerstone of our code generation strategy, chosen for several key reasons:
+
+   - **Robust Schema Parsing**
+     ```yaml
+     # OpenAPI schema
+     components:
+       schemas:
+         UserEvent:
+           type: object
+           properties:
+             userId:
+               type: string
+     ```
+     The CLI provides battle-tested parsing of OpenAPI schemas, handling complex features like:
+     - Nested references
+     - Inheritance
+     - Polymorphism
+     - Type aliases
+     - Complex validation rules
+
+   - **Multi-Language Support**
+     While we currently support TypeScript and Python, the CLI's architecture allows easy expansion to other languages:
+     ```typescript
+     // Language-specific generators
+     class TypeScriptGenerator extends BaseGenerator {
+       protected async generateTypes(): Promise<void> {
+         // Use OpenAPI Generator for base types
+         await this.generateBaseTypes();
+         // Add EventBridge-specific code
+         await this.generateEventCode();
+       }
+     }
+     ```
+
+   - **Type Generation**
+     The CLI excels at generating accurate types:
+     ```typescript
+     // Generated TypeScript interfaces
+     export interface UserEvent {
+       userId: string;
+       metadata?: EventMetadata;
+       timestamp: string;
+     }
+     ```
+
+2. **Handlebars Templating Engine**
+   Handlebars was chosen as our templating engine for several compelling reasons:
+
+   - **Powerful Helper System**
+     ```handlebars
+     {{!-- Custom helper for EventBridge --}}
+     {{#eventType schema}}
+       export class {{className}}Publisher {
+         constructor(private config: EventBridgeConfig) {}
+         
+         async publish(event: {{className}}) {
+           return this.eventBridge.putEvents({
+             Entries: [{
+               EventBusName: this.config.eventBusName,
+               Source: {{source}},
+               DetailType: {{detailType}},
+               Detail: JSON.stringify(event)
+             }]
+           });
+         }
+       }
+     {{/eventType}}
+     ```
+
+   - **Compile-time Template Validation**
+     ```typescript
+     // Template compilation and caching
+     class TemplateRenderer {
+       private readonly cache = new Map<string, HandlebarsTemplateDelegate>();
+
+       async render(template: string, data: any): Promise<string> {
+         let compiled = this.cache.get(template);
+         if (!compiled) {
+           compiled = Handlebars.compile(template);
+           this.cache.set(template, compiled);
+         }
+         return compiled(data);
+       }
+     }
+     ```
+
+   - **Clean Separation of Logic**
+     ```typescript
+     // Template data preparation
+     interface TemplateData {
+       className: string;
+       eventType: string;
+       properties: PropertyDefinition[];
+       imports: ImportDefinition[];
+     }
+
+     class TemplateDataBuilder {
+       build(schema: OpenAPIV3.SchemaObject): TemplateData {
+         // Extract and transform schema data
+         return {
+           className: this.getClassName(schema),
+           eventType: this.getEventType(schema),
+           properties: this.getProperties(schema),
+           imports: this.getImports(schema)
+         };
+       }
+     }
+     ```
+
+3. **Type Systems**
+
+   - **TypeScript**
+     ```typescript
+     // Strong type checking at compile time
+     interface EventBridgeConfig {
+       readonly region: string;
+       readonly eventBusName: string;
+       readonly source?: string;
+     }
+     ```
+
+   - **Pydantic (Python)**
+     ```python
+     # Runtime type validation
+     class EventBridgeConfig(BaseModel):
+         region: str
+         event_bus_name: str
+         source: Optional[str]
+     ```
+
+#### Code Generation Process
+
+The code generation pipeline consists of several sophisticated steps:
+
+1. **Schema Processing**
+   ```typescript
+   class SchemaProcessor {
+     async process(schema: OpenAPIV3.Document): Promise<ProcessedSchema> {
+       // 1. Validate schema
+       await this.validateSchema(schema);
+
+       // 2. Resolve references
+       const resolved = await this.resolveReferences(schema);
+
+       // 3. Extract event definitions
+       const events = this.extractEvents(resolved);
+
+       // 4. Generate type definitions
+       const types = await this.generateTypes(events);
+
+       return { events, types };
+     }
+   }
+   ```
+
+2. **Template Rendering**
+   ```typescript
+   class CodeGenerator {
+     async generate(schema: ProcessedSchema): Promise<void> {
+       // 1. Prepare template data
+       const data = this.prepareTemplateData(schema);
+
+       // 2. Render templates
+       const files = await Promise.all([
+         this.renderPublishers(data),
+         this.renderConsumers(data),
+         this.renderModels(data)
+       ]);
+
+       // 3. Write files
+       await this.writeFiles(files);
+     }
+   }
+   ```
+
+3. **Post-Processing**
+   ```typescript
+   class PostProcessor {
+     async process(files: GeneratedFile[]): Promise<void> {
+       // 1. Format code
+       await this.formatCode(files);
+
+       // 2. Add headers
+       await this.addHeaders(files);
+
+       // 3. Organize imports
+       await this.organizeImports(files);
+
+       // 4. Validate output
+       await this.validateOutput(files);
+     }
+   }
+   ```
+
+This architecture provides several key benefits:
+- **Extensibility**: New languages can be added by implementing language-specific generators
+- **Maintainability**: Clear separation of concerns between schema processing, code generation, and post-processing
+- **Reliability**: Strong typing and validation at every step
+- **Performance**: Template caching and parallel processing for efficient generation
+
+### Project Structure
+
+```
+src/
+├── generators/
+│   ├── core/                 # Core generation logic
+│   │   ├── code-generator.ts # Main generator
+│   │   ├── services/        # Shared services
+│   │   └── scripts/         # CLI scripts
+│   ├── typescript/          # TypeScript specific
+│   │   ├── services/        # TS services
+│   │   ├── templates/       # TS templates
+│   │   └── types.ts         # TS type definitions
+│   └── python/             # Python specific
+│       ├── services/        # Python services
+│       └── templates/       # Python templates
+test/                       # Test suite
+└── generators/             # Generator tests
+    ├── core/               # Core tests
+    ├── typescript/         # TS tests
+    └── python/            # Python tests
+```
 
 ### Core Components
 
@@ -62,151 +307,659 @@ The HB Schema Registry OpenAPI Integration Generator is a powerful tool that tra
    - Extensible helper functions
    - Template caching for performance
 
-### Directory Structure
+## Installation
 
-```
-src/
-├── generators/
-│   ├── core/                 # Core generation logic
-│   │   ├── code-generator.ts # Main generator
-│   │   ├── services/        # Shared services
-│   │   └── scripts/         # CLI scripts
-│   ├── typescript/          # TypeScript specific
-│   │   ├── services/        # TS services
-│   │   ├── templates/       # TS templates
-│   │   └── types.ts         # TS type definitions
-│   └── python/             # Python specific
-│       ├── services/        # Python services
-│       └── templates/       # Python templates
-test/                       # Test suite
-└── generators/             # Generator tests
-    ├── core/               # Core tests
-    ├── typescript/         # TS tests
-    └── python/            # Python tests
-```
+### Prerequisites
+
+1. **Node.js and npm**
+   ```bash
+   # Check versions
+   node --version  # >= 14.x
+   npm --version   # >= 6.x
+   ```
+
+2. **Python (for Python generation)**
+   ```bash
+   # Check version
+   python --version  # >= 3.8
+   ```
+
+### Setup
+
+1. **Install Package Dependencies**
+   ```bash
+   # Install npm packages
+   npm install
+
+   # Install OpenAPI generator CLI
+   npm install @openapitools/openapi-generator-cli -g
+   ```
+
+2. **Configure AWS Credentials**
+   ```bash
+   # Set up AWS credentials for EventBridge
+   aws configure
+   ```
 
 ## Usage
 
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Install OpenAPI generator CLI
-npm install @openapitools/openapi-generator-cli -g
-```
-
-### Generating Code
+### Code Generation
 
 1. **TypeScript Generation**
-```bash
-npm run generate -- --schema=path/to/schema.yaml --language=typescript
-```
+   ```bash
+   # Generate TypeScript code
+   npm run generate -- \
+     --schema=path/to/schema.yaml \
+     --language=typescript \
+     --eventBus=my-event-bus \
+     --region=us-west-2
+   ```
 
-This generates:
-- TypeScript interfaces for all schemas
-- EventBridge publisher classes
-- EventBridge consumer classes
-- Type-safe event handling utilities
-
-Example TypeScript usage:
-```typescript
-import { BillEventPublisher } from './generated/typescript/bills';
-
-const publisher = new BillEventPublisher({
-  region: 'us-west-2',
-  eventBusName: 'homebound-events',
-  source: 'com.homebound'
-});
-
-await publisher.publishBillCreated({
-  billId: '123',
-  amount: 100.50
-});
-```
+   **Generated Output:**
+   - Type definitions (`*.types.ts`)
+   - Event publishers (`*.publisher.ts`)
+   - Event consumers (`*.consumer.ts`)
+   - Model interfaces
 
 2. **Python Generation**
-```bash
-npm run generate -- --schema=path/to/schema.yaml --language=python
-```
+   ```bash
+   # Generate Python code
+   npm run generate -- \
+     --schema=path/to/schema.yaml \
+     --language=python \
+     --eventBus=my-event-bus \
+     --region=us-west-2
+   ```
 
-This generates:
-- Pydantic models for all schemas
-- Python EventBridge publisher classes
-- Python EventBridge consumer classes
-- Type-safe event handling utilities
+   **Generated Output:**
+   - Pydantic models (`models/*.py`)
+   - Event publishers (`events/*_publisher.py`)
+   - Event consumers (`events/*_consumer.py`)
+   - Type hints
 
-Example Python usage:
-```python
-from generated.python.bills import BillEventPublisher, BillCreatedEvent
+### Configuration
 
-publisher = BillEventPublisher(
-    region='us-west-2',
-    event_bus_name='homebound-events',
-    source='com.homebound'
-)
+1. **Generator Options**
+   ```typescript
+   interface GeneratorOptions {
+     // Required
+     language: 'typescript' | 'python';
+     schemaPath: string;
+     
+     // Optional
+     eventBusName?: string;     // AWS EventBridge bus
+     region?: string;           // AWS region
+     source?: string;           // Event source prefix
+     outputDir?: string;        // Output directory
+     clean?: boolean;           // Clean output dir
+     debug?: boolean;           // Debug logging
+   }
+   ```
 
-await publisher.publish_bill_created(BillCreatedEvent(
-    bill_id='123',
-    amount=100.50
-))
-```
-
-### Configuration Options
-
-```typescript
-interface GeneratorOptions {
-  language: 'typescript' | 'python';
-  npmPackageName?: string;        // For TypeScript
-  npmVersion?: string;            // For TypeScript
-  region?: string;                // AWS region
-  eventBusName?: string;          // EventBridge bus
-  defaultSource?: string;         // Event source
-}
-```
+2. **AWS Configuration**
+   ```typescript
+   interface AWSConfig {
+     region: string;
+     eventBusName: string;
+     source?: string;
+     credentials?: {
+       accessKeyId: string;
+       secretAccessKey: string;
+     };
+   }
+   ```
 
 ## Development
 
-### Running Tests
+### Local Development
 
-```bash
-# Run all tests
-npm test
+1. **Setup Development Environment**
+   ```bash
+   # Clone repository
+   git clone https://github.com/your-org/schema-registry.git
+   cd schema-registry
 
-# Run specific test suite
-npm test test/generators/typescript
-npm test test/generators/python
+   # Install dependencies
+   npm install
 
-# Run with coverage
-npm run test:coverage
-```
+   # Build project
+   npm run build
+   ```
 
-### Adding New Features
+2. **Run Tests**
+   ```bash
+   # Run all tests
+   npm test
 
-1. **Adding New Templates**
-   - Add templates to `src/generators/{language}/templates/`
-   - Update template renderer in `services/template-renderer.ts`
-   - Add tests in `test/generators/{language}/services/`
+   # Run specific test suites
+   npm test -- --testPathPattern=typescript
+   npm test -- --testPathPattern=python
 
-2. **Adding New Event Types**
-   - Update event generator in `services/event-generator.ts`
-   - Add corresponding templates
-   - Update tests
+   # Run with coverage
+   npm run test:coverage
 
-### Best Practices
+   # Watch mode for development
+   npm run test:watch
+   ```
 
-1. **Schema Design**
-   - Use OpenAPI 3.x specification
-   - Define clear schema references
-   - Include comprehensive descriptions
-   - Use appropriate data types
+3. **Code Quality**
+   ```bash
+   # Run linter
+   npm run lint
+
+   # Run type checker
+   npm run type-check
+
+   # Format code
+   npm run format
+   ```
+
+### Adding Features
+
+1. **New Templates**
+   ```typescript
+   // 1. Add template file
+   // src/generators/typescript/templates/new-template.ts.hbs
+   export class {{className}} {
+     // Template content
+   }
+
+   // 2. Register template
+   // src/generators/typescript/services/template-registry.ts
+   registerTemplate('new-template', {
+     path: 'new-template.ts.hbs',
+     output: '{{name}}.new.ts'
+   });
+   ```
+
+2. **New Event Types**
+   ```typescript
+   // 1. Define event interface
+   interface NewEvent {
+     type: string;
+     payload: any;
+   }
+
+   // 2. Add event generator
+   class NewEventGenerator {
+     generate(schema: OpenAPIV3.Document): string {
+       // Generation logic
+     }
+   }
+   ```
+
+3. **Custom Generators**
+   ```typescript
+   // Extend base generator
+   class CustomGenerator extends BaseGenerator {
+     protected async generateCode(): Promise<void> {
+       // Custom generation logic
+     }
+   }
+   ```
+
+### Testing Guidelines
+
+1. **Unit Tests**
+   - Test each component in isolation
+   - Mock external dependencies
+   - Focus on edge cases
+   - Maintain high coverage
+
+2. **Integration Tests**
+   - Test component interactions
+   - Verify AWS integration
+   - Test error handling
+   - End-to-end workflows
+
+3. **Schema Tests**
+   - Validate schema parsing
+   - Test reference resolution
+   - Check error cases
+   - Verify output structure
+
+## Error Handling
+
+### Schema Validation
+
+1. **OpenAPI Validation**
+   ```yaml
+   # Valid schema
+   openapi: 3.0.0
+   info:
+     title: API Title
+     version: 1.0.0
+   components:
+     schemas:
+       UserEvent:
+         type: object
+         properties:
+           userId:
+             type: string
+   ```
+
+2. **Common Errors**
+   ```typescript
+   // 1. Invalid schema version
+   Error: Schema validation failed: Invalid OpenAPI version
+
+   // 2. Missing required fields
+   Error: Schema validation failed: Missing required field 'info.title'
+
+   // 3. Invalid event name
+   Error: Invalid event name 'User'. Must end with 'Event'
+   ```
+
+### Runtime Errors
+
+1. **AWS Integration**
+   ```typescript
+   try {
+     await publisher.publish(event);
+   } catch (error) {
+     if (error instanceof EventBridgeError) {
+       // Handle AWS-specific errors
+     }
+     // Handle other errors
+   }
+   ```
 
 2. **Code Generation**
-   - Keep generated code clean and maintainable
-   - Follow language-specific conventions
-   - Implement proper error handling
-   - Include documentation
+   ```typescript
+   // 1. Template errors
+   Error: Failed to compile template: invalid syntax
+
+   // 2. File system errors
+   Error: Failed to write file: permission denied
+
+   // 3. Reference errors
+   Error: Unable to resolve reference '#/components/schemas/Missing'
+   ```
+
+### Error Recovery
+
+1. **Automatic Cleanup**
+   ```typescript
+   try {
+     await generator.generate();
+   } catch (error) {
+     // Cleanup temporary files
+     await generator.cleanup();
+     throw error;
+   }
+   ```
+
+2. **Partial Success**
+   ```typescript
+   // Continue on non-fatal errors
+   const results = await generator.generate({
+     continueOnError: true
+   });
+   
+   // Check for partial failures
+   results.failures.forEach(failure => {
+     console.error(`Failed to generate ${failure.file}`, failure.error);
+   });
+   ```
+## Best Practices
+
+### Schema Design
+
+1. **Event Naming**
+   ```yaml
+   components:
+     schemas:
+       # Good - Clear event name
+       UserCreatedEvent:
+         type: object
+
+       # Bad - Missing 'Event' suffix
+       UserUpdated:
+         type: object
+   ```
+
+2. **Property Naming**
+   ```yaml
+   # Good - Consistent casing
+   UserEvent:
+     type: object
+     properties:
+       userId: string      # camelCase for TS
+       user_id: string     # snake_case for Python
+
+   # Bad - Mixed casing
+   UserEvent:
+     properties:
+       UserID: string      # Inconsistent casing
+       User_Name: string   # Mixed convention
+   ```
+
+3. **Schema Organization**
+   ```yaml
+   # Good - Modular organization
+   components:
+     schemas:
+       User:
+         type: object
+         properties:
+           id: string
+           name: string
+
+       UserCreatedEvent:
+         type: object
+         properties:
+           user:
+             $ref: '#/components/schemas/User'
+           timestamp: string
+   ```
+
+### Code Generation
+
+1. **Output Structure**
+   ```typescript
+   // Organize by domain and type
+   generated/
+     ├── users/
+     │   ├── models/
+     │   │   └── user.ts
+     │   └── events/
+     │       ├── user-created.publisher.ts
+     │       └── user-created.consumer.ts
+     └── orders/
+         └── ...
+   ```
+
+2. **Type Safety**
+   ```typescript
+   // Use strict types
+   interface UserEvent {
+     userId: string;        // Required field
+     metadata?: EventMeta;  // Optional field
+     timestamp: Date;       // Specific type
+   }
+
+   // Avoid any
+   function handleEvent(event: UserEvent) {
+     // Type-safe handling
+   }
+   ```
+
+### AWS Integration
+
+1. **Event Bus Configuration**
+   ```typescript
+   // Separate buses for environments
+   const config = {
+     development: {
+       eventBusName: 'dev-events',
+       region: 'us-west-2'
+     },
+     production: {
+       eventBusName: 'prod-events',
+       region: 'us-west-2'
+     }
+   };
+   ```
+
+2. **Error Handling**
+   ```typescript
+   // Implement retries
+   const publisher = new EventPublisher({
+     maxRetries: 3,
+     retryDelay: 1000,
+     errorHandler: (error) => {
+       // Custom error handling
+     }
+   });
+   ```
+
+## Integration Examples
+
+### AWS Lambda Integration
+
+1. **TypeScript Lambda**
+   ```typescript
+   import { UserEventConsumer } from './generated/users';
+
+   export const handler = async (event: any) => {
+     const consumer = new UserEventConsumer();
+     
+     if (consumer.isUserCreatedEvent(event)) {
+       const { userId, metadata } = event.detail;
+       // Handle user creation
+       return {
+         statusCode: 200,
+         body: JSON.stringify({ userId })
+       };
+     }
+     
+     return {
+       statusCode: 400,
+       body: 'Unsupported event type'
+     };
+   };
+   ```
+
+2. **Python Lambda**
+   ```python
+   from generated.users import UserEventConsumer
+   import json
+
+   def handler(event, context):
+       consumer = UserEventConsumer()
+       
+       if consumer.is_user_created_event(event):
+           user_id = event['detail']['user_id']
+           # Handle user creation
+           return {
+               'statusCode': 200,
+               'body': json.dumps({'user_id': user_id})
+           }
+       
+       return {
+           'statusCode': 400,
+           'body': 'Unsupported event type'
+       }
+   ```
+
+### API Integration
+
+1. **Express.js API**
+   ```typescript
+   import express from 'express';
+   import { UserEventPublisher } from './generated/users';
+
+   const app = express();
+   const publisher = new UserEventPublisher({
+     region: 'us-west-2',
+     eventBusName: 'my-event-bus'
+   });
+
+   app.post('/users', async (req, res) => {
+     try {
+       // Create user in database
+       const user = await db.users.create(req.body);
+       
+       // Publish event
+       await publisher.publishUserCreated({
+         userId: user.id,
+         metadata: {
+           timestamp: new Date(),
+           source: 'api'
+         }
+       });
+
+       res.status(201).json(user);
+     } catch (error) {
+       res.status(500).json({
+         error: 'Failed to create user'
+       });
+     }
+   });
+   ```
+
+2. **FastAPI Integration**
+   ```python
+   from fastapi import FastAPI, HTTPException
+   from generated.users import UserEventPublisher, UserCreatedEvent
+
+   app = FastAPI()
+   publisher = UserEventPublisher(
+       region='us-west-2',
+       event_bus_name='my-event-bus'
+   )
+
+   @app.post('/users')
+   async def create_user(user_data: dict):
+       try:
+           # Create user in database
+           user = await db.users.create(user_data)
+           
+           # Publish event
+           await publisher.publish_user_created(
+               UserCreatedEvent(
+                   user_id=user.id,
+                   metadata={
+                       'timestamp': datetime.now(),
+                       'source': 'api'
+                   }
+               )
+           )
+           
+           return user
+       except Exception as e:
+           raise HTTPException(
+               status_code=500,
+               detail='Failed to create user'
+           )
+   ```
+
+### Testing Examples
+
+1. **Unit Testing Publishers**
+   ```typescript
+   describe('UserEventPublisher', () => {
+     let publisher: UserEventPublisher;
+     let mockEventBridge: jest.Mock;
+
+     beforeEach(() => {
+       mockEventBridge = jest.fn();
+       publisher = new UserEventPublisher({
+         eventBridge: mockEventBridge
+       });
+     });
+
+     it('publishes user created events', async () => {
+       await publisher.publishUserCreated({
+         userId: '123',
+         metadata: { source: 'test' }
+       });
+
+       expect(mockEventBridge).toHaveBeenCalledWith({
+         EventBusName: 'test-bus',
+         Source: 'com.myapp.users',
+         DetailType: 'UserCreatedEvent',
+         Detail: expect.any(String)
+       });
+     });
+   });
+   ```
+
+2. **Integration Testing**
+   ```typescript
+   describe('User API Integration', () => {
+     it('creates user and publishes event', async () => {
+       // Create user
+       const response = await request(app)
+         .post('/users')
+         .send({
+           name: 'Test User',
+           email: 'test@example.com'
+         });
+
+       expect(response.status).toBe(201);
+
+       // Verify event was published
+       const events = await getEventsFromBus();
+       expect(events).toContainEqual({
+         detail_type: 'UserCreatedEvent',
+         detail: {
+           user_id: response.body.id
+         }
+       });
+     });
+   });
+   ```
+
+## Contributing
+
+### Getting Started
+
+1. **Fork and Clone**
+   ```bash
+   # Fork the repository on GitHub
+   # Then clone your fork
+   git clone https://github.com/your-username/schema-registry.git
+   cd schema-registry
+   ```
+
+2. **Setup Development Environment**
+   ```bash
+   # Install dependencies
+   npm install
+
+   # Run tests to verify setup
+   npm test
+   ```
+
+### Development Workflow
+
+1. **Create Feature Branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make Changes**
+   - Follow coding standards
+   - Add tests for new features
+   - Update documentation
+
+3. **Verify Changes**
+   ```bash
+   # Run tests
+   npm test
+
+   # Check code quality
+   npm run lint
+   npm run type-check
+   ```
+
+4. **Submit Pull Request**
+   - Create detailed PR description
+   - Reference related issues
+   - Ensure CI checks pass
+   - Request code review
+
+### Code Standards
+
+1. **Code Style**
+   - Use TypeScript strict mode
+   - Follow ESLint rules
+   - Use Prettier for formatting
+   - Write JSDoc comments
+
+2. **Testing**
+   - Write unit tests
+   - Add integration tests
+   - Maintain test coverage
+   - Test error cases
+
+3. **Documentation**
+   - Update README
+   - Add JSDoc comments
+   - Document breaking changes
+   - Include examples
+
 
 ## Contributing
 
@@ -215,12 +968,6 @@ npm run test:coverage
 3. Add tests for new features
 4. Ensure all tests pass
 5. Submit a pull request
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Error Handling and Validation
 
 ### Schema Validation Errors
 
@@ -435,13 +1182,6 @@ async def create_bill(bill_data: dict):
    - Keep schemas in version control
    - Review schema changes
    - Document security requirements
-
-## Support and Community
-
-- **GitHub Issues**: Report bugs and feature requests
-- **Documentation**: Comprehensive API docs available
-- **Examples**: Sample projects in `/examples`
-- **Contributing**: See CONTRIBUTING.md
 
 ## Roadmap
 
