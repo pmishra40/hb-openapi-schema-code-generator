@@ -543,26 +543,6 @@ test/                       # Test suite
    }
    ```
 
-### Testing Guidelines
-
-1. **Unit Tests**
-   - Test each component in isolation
-   - Mock external dependencies
-   - Focus on edge cases
-   - Maintain high coverage
-
-2. **Integration Tests**
-   - Test component interactions
-   - Verify AWS integration
-   - Test error handling
-   - End-to-end workflows
-
-3. **Schema Tests**
-   - Validate schema parsing
-   - Test reference resolution
-   - Check error cases
-   - Verify output structure
-
 ## Error Handling
 
 ### Schema Validation
@@ -807,78 +787,6 @@ test/                       # Test suite
        }
    ```
 
-### API Integration
-
-1. **Express.js API**
-   ```typescript
-   import express from 'express';
-   import { UserEventPublisher } from './generated/users';
-
-   const app = express();
-   const publisher = new UserEventPublisher({
-     region: 'us-west-2',
-     eventBusName: 'my-event-bus'
-   });
-
-   app.post('/users', async (req, res) => {
-     try {
-       // Create user in database
-       const user = await db.users.create(req.body);
-       
-       // Publish event
-       await publisher.publishUserCreated({
-         userId: user.id,
-         metadata: {
-           timestamp: new Date(),
-           source: 'api'
-         }
-       });
-
-       res.status(201).json(user);
-     } catch (error) {
-       res.status(500).json({
-         error: 'Failed to create user'
-       });
-     }
-   });
-   ```
-
-2. **FastAPI Integration**
-   ```python
-   from fastapi import FastAPI, HTTPException
-   from generated.users import UserEventPublisher, UserCreatedEvent
-
-   app = FastAPI()
-   publisher = UserEventPublisher(
-       region='us-west-2',
-       event_bus_name='my-event-bus'
-   )
-
-   @app.post('/users')
-   async def create_user(user_data: dict):
-       try:
-           # Create user in database
-           user = await db.users.create(user_data)
-           
-           # Publish event
-           await publisher.publish_user_created(
-               UserCreatedEvent(
-                   user_id=user.id,
-                   metadata={
-                       'timestamp': datetime.now(),
-                       'source': 'api'
-                   }
-               )
-           )
-           
-           return user
-       except Exception as e:
-           raise HTTPException(
-               status_code=500,
-               detail='Failed to create user'
-           )
-   ```
-
 ### Testing Examples
 
 1. **Unit Testing Publishers**
@@ -935,84 +843,6 @@ test/                       # Test suite
      });
    });
    ```
-
-## Contributing
-
-### Getting Started
-
-1. **Fork and Clone**
-   ```bash
-   # Fork the repository on GitHub
-   # Then clone your fork
-   git clone https://github.com/your-username/schema-registry.git
-   cd schema-registry
-   ```
-
-2. **Setup Development Environment**
-   ```bash
-   # Install dependencies
-   npm install
-
-   # Run tests to verify setup
-   npm test
-   ```
-
-### Development Workflow
-
-1. **Create Feature Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make Changes**
-   - Follow coding standards
-   - Add tests for new features
-   - Update documentation
-
-3. **Verify Changes**
-   ```bash
-   # Run tests
-   npm test
-
-   # Check code quality
-   npm run lint
-   npm run type-check
-   ```
-
-4. **Submit Pull Request**
-   - Create detailed PR description
-   - Reference related issues
-   - Ensure CI checks pass
-   - Request code review
-
-### Code Standards
-
-1. **Code Style**
-   - Use TypeScript strict mode
-   - Follow ESLint rules
-   - Use Prettier for formatting
-   - Write JSDoc comments
-
-2. **Testing**
-   - Write unit tests
-   - Add integration tests
-   - Maintain test coverage
-   - Test error cases
-
-3. **Documentation**
-   - Update README
-   - Add JSDoc comments
-   - Document breaking changes
-   - Include examples
-
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new features
-4. Ensure all tests pass
-5. Submit a pull request
 
 ### Schema Validation Errors
 
@@ -1160,55 +990,6 @@ def handler(event, context):
         bill_id = event['detail']['bill_id']
         amount = event['detail']['amount']
         # Process the bill...
-```
-
-### API Integration
-
-1. **Express.js API**
-```typescript
-import express from 'express';
-import { BillEventPublisher } from './generated/typescript/bills';
-
-const app = express();
-const publisher = new BillEventPublisher({
-  region: 'us-west-2',
-  eventBusName: 'homebound-events'
-});
-
-app.post('/bills', async (req, res) => {
-  try {
-    await publisher.publishBillCreated({
-      billId: req.body.id,
-      amount: req.body.amount
-    });
-    res.status(200).json({ message: 'Bill created' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-```
-
-2. **FastAPI Integration**
-```python
-from fastapi import FastAPI
-from generated.python.bills import BillEventPublisher, BillCreatedEvent
-
-app = FastAPI()
-publisher = BillEventPublisher(
-    region='us-west-2',
-    event_bus_name='homebound-events'
-)
-
-@app.post('/bills')
-async def create_bill(bill_data: dict):
-    try:
-        await publisher.publish_bill_created(BillCreatedEvent(
-            bill_id=bill_data['id'],
-            amount=bill_data['amount']
-        ))
-        return {'message': 'Bill created'}
-    except Exception as e:
-        return {'error': str(e)}, 500
 ```
 
 ### Event Handling
